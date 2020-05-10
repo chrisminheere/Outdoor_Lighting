@@ -18,16 +18,19 @@
 //________________define stuff here.___________________
 #define lightSensorAdress 0x23     // I2C addres of Light sensor.                            Default =  0x23.
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); // I2C addres of PWM breakout.      Default =  0x40.
-LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address   Default =  0x27.
+// Set the LCD I2C address   Default =  0x27.
+LiquidCrystal_I2C lcd(0x27, 20, 4);
 //#define BLYNK_PRINT Serial       // Debugging for blynk, turn of when not needed.
 WiFiUDP ntpUDP;
-const long utcOffsetInSeconds = 3600;   //Winter (3600)  Zomer(7200).
+const long utcOffsetInSeconds = 7200;   //Winter (3600)  Zomer(7200).
 NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", utcOffsetInSeconds);
 BH1750 lightMeter;
 #define DHT11PIN D4
 dht11 DHT11;
 SimpleTimer timer;
 WidgetLED led1(V9);
+WidgetLED led2(V12);
+
 
 //____________________________________________________
 
@@ -47,18 +50,20 @@ int currentDay;
 int ledPin = D6;  //licht for RST. (White LED)
 int ledPin2 = D7; //licht for auto mode.(Red LED)
 int nRF24 = D8;
+int pirin = D5;   //input for Pir motion sensor
 int lichtsOnOff = 0;
 int k = 0;
 int tempWarning = 0;
+int pir = 0;
 
 
 
 
 //____________________________________SETTINGS________________________________________
 // Blynk settings
-char auth[] = "auth here";  //Auth key.
-char ssid[] = "ssid here";               //WIFI SSID it connects with.
-char pass[] = "pasword here";                     //WIFI password.
+char auth[] = "******";               //Auth key.
+char ssid[] = "******";               //WIFI SSID it connects with.
+char pass[] = "******";               //WIFI password.
 
 //Min Lux, is when the light go ON.
 int minLux = 1;
@@ -112,15 +117,15 @@ byte vocht[8] = {
 
 
 void setup() {
-  //Serial.begin(115200); // For debugging.
-  //while (!Serial) {}; // wait for serial port to connect. Needed for native USB port only.
+  Serial.begin(115200); // For debugging.
+  while (!Serial) {}; // wait for serial port to connect. Needed for native USB port only.
   Blynk.begin(auth, ssid, pass); //ESP8266 connects to WiFi.
   timer.setInterval(4000L, secondTimer); //Time length of the 2nd timer.
 
   //The I2c bus starts on the indicated pins.
   Wire.begin(4, 5);   //Define the i2c pins on the ESP8266    SDA, GPIO4 = D2___SCL, GPIO5 = D1.
 
-  lcd.begin(20, 4); //Start the I2c LCD screen.
+  lcd.begin(); //Start the I2c LCD screen.
   lcd.createChar(1, temp);
   lcd.createChar(2, vocht);
 
@@ -129,6 +134,7 @@ void setup() {
   pwm.setPWMFreq(1600); // This is the maximum PWM frequency.
   timeClient.begin(); //Start communication with the time server to retrieve the time.
 
+  pinMode(pirin, INPUT);
   pinMode(ledPin, OUTPUT);
   pinMode(ledPin2, OUTPUT);
   pinMode(nRF24, OUTPUT);
@@ -141,6 +147,14 @@ void setup() {
 void loop() {
   Blynk.run(); //Communication with the app.
   timer.run(); //2nd timer to time stuff.
+  pir = digitalRead(pirin);
+  if (pir == 1){
+    led2.on();
+    }
+    else{
+      led2.off();
+      }
+  Serial.println(pir);
 
   //Writes temperature and LUX data to the app.
   Blynk.virtualWrite(V0, DHT11.temperature);
@@ -161,16 +175,23 @@ void loop() {
     if (currentDay == 6 || currentDay == 0) {
       if (lux < minLux ) {
         if (currentHour >= startHour && currentHour <= endHour ) {
+         if (pir == 1) {
+            turnAllOn();
+          }
+          else if (pir == 0){
           turnAllOff();
+          Serial.println("OFF");
           pwm.setPin(10, 4096 );//setPWM(channel, on, off).
-          //        pwm.setPin(9, 4096 );//setPWM(channel, on, off).
+          }
         }
         else {
           turnAllOn();
+          Serial.println("ON");
         }
       }
       else if (lux > maxLux) {
         turnAllOff();
+        Serial.println("OFF");
       }
     }
 
@@ -178,21 +199,28 @@ void loop() {
     else {
       if (lux < minLux ) {
         if (currentHour >= startHour1 && currentHour <= endHour1 ) {
+          if (pir == 1) {
+            turnAllOn();
+          }
+          else if (pir == 0){
           turnAllOff();
+          Serial.println("OFF");
           pwm.setPin(10, 4096 );//setPWM(channel, on, off).
-          //        pwm.setPin(9, 4096 );//setPWM(channel, on, off).
+          }
         }
         else {
           turnAllOn();
+          Serial.println("ON");
         }
       }
       else if (lux > maxLux) {
         turnAllOff();
+        Serial.println("OFF");
       }
     }
-    //====================================================================
   }
-  
+  //====================================================================
+
   else {
     digitalWrite(ledPin2, LOW);//Turns OFF the LED to see that Auto Mode is OFF.
     Blynk.virtualWrite(V5, 0); //turns on the button in the app.
@@ -254,8 +282,11 @@ void secondTimer() {
 }
 
 
-//display stuff.
+
+
+//display / Serial stuff.
 void DrawLcd() {
+
 
   //writes the time to the screen.
   //-------------------------------------------------------------
@@ -298,8 +329,6 @@ void DrawLcd() {
     lcd.print("Zaterdag ");
   }
   //-------------------------------------------------------------
-
-
 
 
   lcd.setCursor(10, 1);
@@ -366,6 +395,7 @@ void turnAllOn() {
   Blynk.virtualWrite(V1, 1);
   led1.on();
   digitalWrite(nRF24, HIGH);
+  Serial.println("ON");
 }
 //-------------------------------------------------------------
 
@@ -385,6 +415,7 @@ void turnAllOff() {
   Blynk.virtualWrite(V1, 0);
   led1.off();
   digitalWrite(nRF24, LOW);
+  Serial.println("OFF");
 }
 //-------------------------------------------------------------
 
