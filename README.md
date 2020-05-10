@@ -1,12 +1,10 @@
-#Documentation
-======
-OUTSIDE LIGHTING
+# Documentation ## OUTSIDE LIGHTING
+
 
 
 
 
 ### Wire scheme
-======
 | PinOut.   |	Pin On ESP8266   |	Pin In Code   |	Function   |	I2C Address   |	RJ45   |	Technical specs   |
 | ------------- | -------------  | -------------  | -------------  | -------------  | -------------  | -------------  |
 | ntpUDP timeClient   | 		|   Software  europe.pool.ntp.org   |	Gets real-time Time from the Internet   |      |      |       |			
