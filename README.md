@@ -5,9 +5,11 @@
 | ntpUDP timeClient   |   ---   |		|   Software  europe.pool.ntp.org   |	Gets real-time Time from the Internet   |   ---   |   ---    |   ---    |
  			
 						
-| BH1750 	SDA, D1 	SDA, GPIO4 	measure light	0x23	7 & 8	In - 3.3V - 5V
-| level Out - 3.3V - 5V
-| 16bit ADC
+| BH1750|    	SDA, D1|    	SDA, GPIO4|    	measure light|   	0x23|   	7 & 8|   	In - 3.3V - 5V level Out - 3.3V - 5V 16bit ADC |   
+
+
+
+
 | BH1750 	SCL, D2	 SCL, GPIO5	measure light	0x23	7 & 8	In - 3.3V - 5V
 | level Out - 3.3V - 5V
 | 16bit ADC
