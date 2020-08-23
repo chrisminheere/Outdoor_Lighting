@@ -61,9 +61,9 @@ int pir = 0;
 
 //____________________________________SETTINGS________________________________________
 // Blynk settings
-char auth[] = "******";               //Auth key.
-char ssid[] = "******";               //WIFI SSID it connects with.
-char pass[] = "******";               //WIFI password.
+char auth[] = "************";               //Auth key.
+char ssid[] = "************";               //WIFI SSID it connects with.
+char pass[] = "************";               //WIFI password.
 
 //Min Lux, is when the light go ON.
 int minLux = 1;
@@ -148,12 +148,12 @@ void loop() {
   Blynk.run(); //Communication with the app.
   timer.run(); //2nd timer to time stuff.
   pir = digitalRead(pirin);
-  if (pir == 1){
+  if (pir == 1) {
     led2.on();
-    }
-    else{
-      led2.off();
-      }
+  }
+  else {
+    led2.off();
+  }
   Serial.println(pir);
 
   //Writes temperature and LUX data to the app.
@@ -175,13 +175,13 @@ void loop() {
     if (currentDay == 6 || currentDay == 0) {
       if (lux < minLux ) {
         if (currentHour >= startHour && currentHour <= endHour ) {
-         if (pir == 1) {
+          if (pir == 1) {
             turnAllOn();
           }
-          else if (pir == 0){
-          turnAllOff();
-          Serial.println("OFF");
-          pwm.setPin(10, 4096 );//setPWM(channel, on, off).
+          else if (pir == 0) {
+            turnAllOff();
+            Serial.println("OFF");
+            pwm.setPin(10, 4096 );//setPWM(channel, on, off).
           }
         }
         else {
@@ -202,10 +202,10 @@ void loop() {
           if (pir == 1) {
             turnAllOn();
           }
-          else if (pir == 0){
-          turnAllOff();
-          Serial.println("OFF");
-          pwm.setPin(10, 4096 );//setPWM(channel, on, off).
+          else if (pir == 0) {
+            turnAllOff();
+            Serial.println("OFF");
+            pwm.setPin(10, 4096 );//setPWM(channel, on, off).
           }
         }
         else {
@@ -448,20 +448,17 @@ BLYNK_WRITE(V2)
 }
 
 BLYNK_WRITE(V4) {
-  for (int i = 0; i <= 3; i++) {
-    for (int i = 0; i <= 7; i++) {
-      pwm.setPin(i, 4096 );//setPWM(channel, on, off)
-      delay(150);
-    }
-    for (int i = 0; i <= 7; i++) {
-      pwm.setPin(i, 0 );//setPWM(channel, on, off)
-      delay(150);
-    }
-  }
+  int pinValue = param.asInt();
+  pwm.setPin(10, pinValue );//setPWM(channel, on, off)
 }
 
 BLYNK_WRITE(V5) {
   autoMode = param.asInt();
+}
+
+BLYNK_WRITE(V6) {
+  int pinValue = param.asInt();
+  pwm.setPin(11, pinValue );//setPWM(channel, on, off)
 }
 
 BLYNK_WRITE(V7) {
@@ -492,11 +489,15 @@ BLYNK_WRITE(V11) {
   yield();
 }
 
-BLYNK_WRITE(V12) {
+BLYNK_WRITE(V13) {
   int pinValue = param.asInt();
-  pwm.setPin(8, pinValue );//setPWM(channel, on, off)
-  pwm.setPin(9, pinValue );//setPWM(channel, on, off)
-  pwm.setPin(10, pinValue );//setPWM(channel, on, off)
-  pwm.setPin(11, pinValue );//setPWM(channel, on, off)
-  yield();
+  if (pinValue == 0){
+  digitalWrite(nRF24, LOW);
+  }
+
+  else {
+    digitalWrite(nRF24, HIGH);
+    }
 }
+
+//D8
